@@ -212,6 +212,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:@google/generative-ai@0.21",
         "npm:@types/node@^22.10.4",
         "npm:discord.js@^14.17.2",
         "npm:dotenv@^16.4.7",
