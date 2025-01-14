@@ -38,6 +38,10 @@ client.once('ready', () => {
     
 });
 
+function getUserData(discordId){
+    return sql.query(`SELECT * FROM Pessoas WHERE discord_id = ${discordId}`)[0];
+}
+
 client.on('messageCreate', async message => {
     const texto = message.content.toLowerCase();
     const inicioTexto = texto.split(" ")[0];
@@ -50,7 +54,7 @@ client.on('messageCreate', async message => {
     const canal = message.channel
 
     if(Math.random() < 1/100){canal.send('bonoro23')}
-    if(message.channelId != "1328478821401231390"){return}
+    if(message.channelId != "1328499991378919536"){return}
     if(message.author.bot){return}
 
     console.log(message.author.displayName + ' : ' + message.content);
@@ -58,6 +62,39 @@ client.on('messageCreate', async message => {
     if (texto === "casino"){
         const numero = Math.floor(Math.random() * 100) + 1;
         canal.send(`você ganhou ${numero} reais`);
+    }
+
+    if (texto === "cadastrartodos"){
+        console.log("cadastrando todos os membros");
+        const membros = await message.guild.members.fetch();
+        membros.forEach(async membro => {
+            const usuario = membro.user;
+            console.log("cadastrando " + usuario.username);
+            const usuarioData = await getUserData(usuario.id);
+            if (usuarioData.length === 0){
+                await sql.query(`INSERT INTO Pessoas (discord_id, dinheiro, nome) VALUES (${usuario.id}, 0, "${usuario.username}")`);
+            }
+        });
+    }
+    if (inicioTexto === "/doar"){
+        const valorDoar = parseInt(restoTexto);
+        const usuarioDoar = message.mentions.users.first();
+        if(!usuarioDoar){return}
+        if(isNaN(valorDoar)){return}
+        if(valorDoar < 1){return}
+
+        const doadorData = await getUserData(autor.id);
+        const recebedorData = await getUserData(usuarioDoar.id);
+
+        if (doadorData.dinheiro < valorDoar){
+            message.reply("Você não tem saldo suficiente para doar, pobre");
+            return;
+        }
+
+        await sql.query(`UPDATE Pessoas SET dinheiro = dinheiro - ${valorDoar} WHERE discord_id = ${autor.id}`);
+        await sql.query(`UPDATE Pessoas SET dinheiro = dinheiro + ${valorDoar} WHERE discord_id = ${usuarioDoar.id}`);
+        
+        message.reply(`Você doou ${valorDoar} reais para ${usuarioDoar.username}\n Seu saldo atual é ${doadorData.dinheiro - valorDoar}`);
     }
 
     if (inicioTexto === "bonoro23" || texto.substring(0, 8) == "bonoro23" || message.mentions.has(client.user)){
@@ -76,17 +113,16 @@ client.on('messageCreate', async message => {
             evite mensagens explicando um tema por completo,
             evite mensagens com mais de 1 paragrafo,
             evite repitir muito as mensagens anteriores,
-            fale da maneira mais refinada possivel, use palavras chiques do portugues,
             use pouca formatação de markdown, 
             aqui está a lista das ultimas mensagens: \n${ultimasMensagensString} \n
-            voce tem que responder como um objeto json exemplo:
-            [{"mensagem": "oi"},{"mensagem": "tudo bem"},{"memoria": "o bonoro é legal"}]
-            para mandar mensagem coloque mensagem e para criar uma memoria coloque memoria
+            voce tem que responder com sua resposta, exemplo:
+            "você é um chatbot" - "não sou um chatbot zoi" \n
+            "fale sobre a historia da mongolia" - "não sei nada sobre a mongolia" \n
             essa é a ultima mensagem que você tem que responder ${autor.username} - ${autor.displayName}  : ${restoTexto}`;
             const resposta = await model.generateContent(prompt);
             message.reply(resposta.response.text());
         }catch(e){
-            const mensagemErro = `zoi deu erro: \`\`\`${e.message} ${e.stack}\`\`\``;
+            const mensagemErro = `erro: \`\`\`${e.message} ${e.stack}\`\`\``;
             console.log(mensagemErro);
             canal.send(mensagemErro);
         }
