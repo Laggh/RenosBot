@@ -7,5 +7,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.4"
+  },
+  "scripts": {
+    "start": "deno main.js"
   }
+  
+  
 }

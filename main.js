@@ -18,8 +18,8 @@ console.log("Inicializando bot:");
 
 const sql = await mysql.createConnection({ 
     host: "127.0.0.1",
-    user: "root",
-    password: "",
+    user: "rootUser",
+    password: "senha123",
     database: "DISCORD"
 });
 console.log("Conectado ao banco de dados");
